@@ -1,202 +1,208 @@
 from state import State
 from board import Board
+import re
+import random
+import sys
 
 
-source includes.sh
 
-USERNAME='nobody'
-PLAYER=0
-ADJACENT=''
-PREVIOUS=1
-WUMPUS=$(seq 1 19 | shuf -n 1)
-BATS=$(seq 1 19 | shuf -n 1)
-PIT=$(seq 1 19 | shuf -n 1)
-ARROW=$(seq 1 19 | shuf -n 1)
-ARROWS_REMAINING=3
-GAMEOVER=0
+state = State("state")
+board = Board()
 
-is_debug_mode () {
-    return 1
-}
 
-def is_adjacent(v1, v2) {
-    return v2 in adj[v1]
-}
+def is_debug_mode():
+    return False
 
-get_adjacent () {
-    local ADJ1=$((($1+2)%20))
-    local ADJ2=$((($1+18)%20))
-    local ADJ3=$(($1+1-2*($1%2)))
-    echo $ADJ1 $ADJ2 $ADJ3 | tr ' ' '\n' | sort -n | paste -d' ' -s
-}
+# TODO needs to tweet actually
+def tweet(msg):
+    print msg
+
+def is_game_in_progress():
+    # todo check to see if state exists
+    return False
+
+
+def display_moves():
+    print_state()
+    #msg = "You are in cavern " + str(state.player_position)
+    msg = "\nPossible moves:"
+    for move in board.get_adjacent(state.player_position):
+        msg += " " + str(move)
+    msg += "\nYour move? (type 'help' for list of commands)"
+    tweet(msg)
+
+
+def get_random_event():
+    msg = ""
+    # decide if we're going to show a random event at all
+    # if so, pick a random event
+    return msg
 
 # make the Wumpus move to an adjacent cave
-def disturb_wumpus() {
-    WUMPUS=$(echo $ADJACENT | cut -d' ' -f $(seq 1 3 | shuf -n 1))
-}
+def disturb_wumpus():
+    wumpus_adjacent = board.get_adjacent(state.wumpus_position)
+    state.wumpus_position = wumpus_adjacent[random.randint(0,2)]
+        
 
 # takes 1 argument, the destination
-def move (v) {
-    if is_adjacent(v, player_position):
-        player_position=v
+def check_position():
+    # check wumpus
+    if state.player_position == state.wumpus_position:
+        tweet("You've been eaten by a wumpus!")
+        state.delete()
+        sys.exit()
 
-        # check wumpus
-        if player_position = wumpus_position:
-            tweet("You've been eaten by a wumpus!")
-            #TODO delete_state
+    # check pit
+    if state.player_position == state.pit_position:
+        tweet("You fell down a pit! You died!")
+        state.delete()
+        sys.exit()
 
-        # check pit
-        if player_position = pit_position:
-            tweet("You fell down a pit! You died!")
-            #TODO delete_state
+    # check bats
+    if state.player_position == state.bat_position:
+        #TODO don't we need to re-check after the bats drop the player?
+        state.player_position = random.randint(1, 20)
+        tweet("Bats carried you away!")
 
-        # check bats
-        if player_position = bat_position:
-            #TODO don't we need to re-check after the bats drop the player?
-            player_position = random.randint(0, 19)
-            tweet("Bats carried you away!")
+    # check arrow
+    if state.player_position == state.arrow_position:
+        tweet("You found an arrow!")
+        state.arrow_position = 999
+        state.arrows_remaining += 1
+        state.update()
 
-        # check arrow
-        if [ $PLAYER -eq $ARROW ] 
-        then
-           echo "You found an arrow!"
-           let "ARROW = 999"
-           let "ARROWS_REMAINING = ARROWS_REMAINING + 1"
-        fi
 
-        set_state
-    else
-        echo "Invalid move: $1"
-    fi
-}
+# takes 1 argument, the destination
+def move (v):
+    if board.is_adjacent(v, state.player_position):
+        state.player_position=int(v)
+        state.update()
+        check_position()
+    else:
+        tweet("Invalid move: " + v)
+
 
 # takes 1 argument, the target
-shoot () {
-    local TARGET=$(translate_human_to_computer $1)
-    if [ $ARROWS_REMAINING -gt 0 ]
-    then
-        if is_adjacent $TARGET
-        then
-            if [ $TARGET -eq $WUMPUS ]
-            then
-                echo "You killed the wumpus! You WIN!"
-                delete_state
-                exit 0
-            fi
-            echo "Drats! Missed!"
-            let "ARROWS_REMAINING = ARROWS_REMAINING - 1"
-            if is_adjacent $WUMPUS
-            then
-                disturb_wumpus
-            fi
-        else
-            echo "Think you can shoot through rock walls?"
-        fi
-    else
-        echo "No arrows left."
-    fi
-}
+def shoot(v):
+    target = v
+    if arrows_remaining > 0:
+        if board.is_adjacent(target, state.player_position):
+            if target == state.wumpus_position:
+                tweet("You killed the wumpus! You WIN!")
+                state.delete()
+            else:
+                tweet("Drats! Missed!")
+                state.arrows_remaining -= 1
+                if board.is_adjacent(state.wumpus_position, state.player_position):
+                    disturb_wumpus()
+                # TODO save state
+        else:
+            tweet("Think you can shoot through rock walls?")
+    else:
+        tweet("No arrows left.")
 
-process_command () {
-    if [[ $1 =~ ^[0-9]+ ]]
-    then
-        move $1
-    elif [[ $1 =~ ^[Mm] && $# == 2 && $2 =~ ^[0-9]+$ ]]
-    then
-        move $2
-    elif [[ $1 =~ ^[Ss] && $# == 2 && $2 =~ ^[0-9]+$ ]]
-    then
-        shoot $2
-    elif [[ $1 =~ ^[EeQq] ]]
-    then
-        echo
-        echo "You retire to a comfortable life of not hunting wumpuses."
-        delete_state
-    else
+
+def process_command(cmd):
+    if re.search('^[0-9]+$', cmd):
+        move(cmd)
+    elif re.search('^[Mm][^ ]* [0-9]+$', cmd):
+        match = re.search('^[Mm][^ ]* ([0-9]+)$', cmd)
+        move(match.group(1))
+    elif re.search('^[Ss][^ ]* [0-9]+$', cmd):
+        match = re.search('^[Ss][^ ]* ([0-9]+)$', cmd)
+        shoot(match.group(1))
+    elif re.search('^[EeQq]', cmd):
+        tweet("You retire to a comfortable life of not hunting wumpuses.")
+        tweet("DM me any time to start a new game.")
+        state.delete()
+        sys.exit()
+    else:
         print_help
-    fi
-}
-
-print_help () {
-    echo "Commands are:"
-    echo "- (m|move) #"
-    echo "- s|shoot #"
-    echo "- q|quit"
-}
-
-print_intro () {
-    echo "###################"
-    echo "#                 #"
-    echo "# HUNT THE WUMPUS #"
-    echo "#                 #"
-    echo "###################"
-    echo
-    echo "You are in a series of dark caverns."
-    echo "Like, really dark."
-    echo "You can barely see."
-    echo
-    echo "But the caverns are ADA compliant."
-    echo "They are numbered in Braille."
-    echo "Which, somehow, you can read. Cool!"
-    echo
-    echo "You are here to hunt the terrifying wumpus."
-    echo "You'll know when he's near. You'll smell him."
-    echo
-    echo "Look out for the bottomless pit. And the bats!"
-    echo "You have 3 arrows."
-}
-
-print_intro
-
-if [ "$#" -eq "1" ]
-then
-    # does state exist
-    if is_game_in_progress "$1"
-    then
-        get_state "$1"
-    fi
-fi
-
-if [ "$#" -eq "2" ]
-then
-    # does state exist
-    if is_game_in_progress "$1"
-    then
-        get_state "$1"
-    else
-        print_intro
-    fi
-fi
 
 
-while [ $GAMEOVER -eq 0 ]
-do
-    echo
-    echo "You are in cavern #$(translate_computer_to_human $PLAYER)"
-    if is_debug_mode; then echo "W: $WUMPUS, P: $PIT, B: $BATS, A: $ARROW"; fi
-    ADJACENT=$(get_adjacent $PLAYER)
-
-    random_event    
-    if is_adjacent $WUMPUS
-    then
-        echo "You smell something awful."
-    fi
-    if is_adjacent $PIT
-    then
-        echo "You feel a breeze."
-    fi
-    if is_adjacent $BATS
-    then
-        echo "You hear flapping."
-    fi
+def print_help():
+    tweet("Commands are:" +
+          "\n- (m|move) #" +
+          "\n- s|shoot #" +
+          "\n- h|help" +
+          "\n- q|quit")
 
 
-    display_moves $ADJACENT
-    echo
-    read -p "Enter a command: " COMMAND
-    #echo "You entered: $COMMAND"
-    process_command $COMMAND
+def print_intro():
+    #TODO split into tweets
+    #TODO we can DM > 140 with python right?
+    tweet("===================" +
+          "\n| HUNT THE WUMPUS |" +
+          "\n===================")
 
-done
+    tweet("You are in a series of dark caverns." +
+          "\nLike, really dark." +
+          "\nYou can barely see.")
 
-exit 0
+    tweet("The caverns are ADA compliant." +
+          "\nThey are numbered in Braille." +
+          "\nWhich, somehow, you can read. Cool!")
+
+    tweet("You are here to hunt the terrifying wumpus." +
+         "\nYou'll know when he's near. You'll smell him." +
+         "\nAnd look out for the bottomless pit." +
+         "\nAnd did I mention the bats?")
+
+    tweet("You have 3 arrows.")
+
+
+
+
+def get_adjacent_danger():
+    msg = ""
+
+    if board.is_adjacent(state.player_position, state.wumpus_position):
+        msg += "\nYou smell something awful."
+
+    if board.is_adjacent(state.player_position, state.pit_position):
+        msg += "\nYou feel a breeze."
+
+    if board.is_adjacent(state.player_position, state.bat_position):
+        msg += "\nYou hear flapping."
+    
+    return msg
+
+
+def print_state():
+    msg = "You are in cavern " + str(state.player_position)
+    if is_debug_mode():
+        msg += "\nW: " + state.wumpus_position +", P: " + state.pit_position + ", B: " + state.bat_position + ", A: " + state.arrow_position
+    msg += get_random_event()
+    msg += get_adjacent_danger()
+    tweet(msg)
+
+
+def main(argv):
+    # Make sure we received a target user
+    if len(argv) < 2:
+        print "usage: python wumpus.py username [move]"
+        sys.exit()
+
+    # TODO verify it is valid username A-Za-z0-9_ and strip @
+    username = argv[1]
+
+    # TODO is game in progress
+    # check for existing state
+    try:
+        state.load(username)
+    except:
+        print_intro()
+        display_moves()
+        sys.exit()
+
+    if len(argv) < 3:
+        print_help()
+    else:
+        # TODO strip unexpected characters
+        process_command(argv[2])
+        display_moves()
+        sys.exit()
+
+
+if __name__ == "__main__":
+    main(sys.argv)
