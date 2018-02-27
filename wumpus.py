@@ -1,30 +1,34 @@
 from state import State
 from board import Board
+from config import get_client
+from birdy.twitter import UserClient
+from twitter import Twitter
 import re
 import random
 import sys
 
 
-
 state = State("state")
 board = Board()
+# create twitter client
+client = get_client()
+# create twitter wrapper
+twitter = Twitter(client)
 
 
 def is_debug_mode():
-    return False
+    return True
 
-# TODO needs to tweet actually
+
 def tweet(msg):
-    print msg
-
-def is_game_in_progress():
-    # todo check to see if state exists
-    return False
+    if is_debug_mode():
+        print msg
+    else:
+        twitter.dm(state.username, msg)
 
 
 def display_moves():
     print_state()
-    #msg = "You are in cavern " + str(state.player_position)
     msg = "\nPossible moves:"
     for move in board.get_adjacent(state.player_position):
         msg += " " + str(move)
@@ -38,10 +42,12 @@ def get_random_event():
     # if so, pick a random event
     return msg
 
+
 # make the Wumpus move to an adjacent cave
 def disturb_wumpus():
     wumpus_adjacent = board.get_adjacent(state.wumpus_position)
     state.wumpus_position = wumpus_adjacent[random.randint(0,2)]
+    state.update()
         
 
 # takes 1 argument, the destination
@@ -60,9 +66,11 @@ def check_position():
 
     # check bats
     if state.player_position == state.bat_position:
-        #TODO don't we need to re-check after the bats drop the player?
         state.player_position = random.randint(1, 20)
+        state.update()
         tweet("Bats carried you away!")
+        # player has moved, re-check state
+        check_position()
 
     # check arrow
     if state.player_position == state.arrow_position:
@@ -95,7 +103,6 @@ def shoot(v):
                 state.arrows_remaining -= 1
                 if board.is_adjacent(state.wumpus_position, state.player_position):
                     disturb_wumpus()
-                # TODO save state
         else:
             tweet("Think you can shoot through rock walls?")
     else:
@@ -117,7 +124,7 @@ def process_command(cmd):
         state.delete()
         sys.exit()
     else:
-        print_help
+        print_help()
 
 
 def print_help():
@@ -129,8 +136,7 @@ def print_help():
 
 
 def print_intro():
-    #TODO split into tweets
-    #TODO we can DM > 140 with python right?
+
     tweet("===================" +
           "\n| HUNT THE WUMPUS |" +
           "\n===================")
@@ -146,11 +152,9 @@ def print_intro():
     tweet("You are here to hunt the terrifying wumpus." +
          "\nYou'll know when he's near. You'll smell him." +
          "\nAnd look out for the bottomless pit." +
-         "\nAnd did I mention the bats?")
-
-    tweet("You have 3 arrows.")
-
-
+         "\nAnd did I mention the bats?" +
+         "\n" +
+         "\nYou have 3 arrows.")
 
 
 def get_adjacent_danger():
@@ -169,7 +173,7 @@ def get_adjacent_danger():
 
 
 def print_state():
-    msg = "You are in cavern " + str(state.player_position)
+    msg = "You are in cavern " + str(state.player_position) + "."
     if is_debug_mode():
         msg += "\nW: " + state.wumpus_position +", P: " + state.pit_position + ", B: " + state.bat_position + ", A: " + state.arrow_position
     msg += get_random_event()
@@ -183,11 +187,10 @@ def main(argv):
         print "usage: python wumpus.py username [move]"
         sys.exit()
 
-    # TODO verify it is valid username A-Za-z0-9_ and strip @
-    username = argv[1]
+    # Strip invalid username characters (only A-Za-z0-9_ are valid)
+    username = re.sub(r'[^A-Za-z0-9_]', r'', argv[1])
 
-    # TODO is game in progress
-    # check for existing state
+    # Check for existing game/state
     try:
         state.load(username)
     except:
@@ -196,10 +199,11 @@ def main(argv):
         sys.exit()
 
     if len(argv) < 3:
+        display_moves()
         print_help()
     else:
-        # TODO strip unexpected characters
-        process_command(argv[2])
+        # Strip unexpected characters (only A-Za-z0-9 " " and "?" are valid)
+        process_command(re.sub(r'[^A-Za-z0-9\?\ ]', r'',argv[2]))
         display_moves()
         sys.exit()
 
