@@ -1,0 +1,32 @@
+from birdy.twitter import UserClient
+
+# Define applicaton variables
+
+# Get these values from https://apps.twitter.com:
+CONSUMER_KEY = 'ABCDEfghijKLMNOpqrstUVWXY'
+CONSUMER_SECRET = 'ABCDE12345fghij67890KLMNO98765pqrst43210UVWXYZZZZZ'
+
+# Get these value from running the user auth, e.g. python auth.py:
+OAUTH_TOKEN = 'ABCDE12345fghij67890KLMNO98765pqrst43210UVWXYZZZZZ'
+OAUTH_TOKEN_SECRET = 'ABCDE12345fghij67890KLMNO98765pqrst43210UVWXY'
+
+def get_consumer_key():
+    return CONSUMER_KEY
+
+def get_consumer_secret():
+    return CONSUMER_SECRET
+
+def get_client():
+    # create twitter client
+    client = UserClient(CONSUMER_KEY,
+                        CONSUMER_SECRET,
+                        OAUTH_TOKEN,
+                        OAUTH_TOKEN_SECRET)
+
+    return client
+
+def main():
+    print("You probably didn't mean to run this file directly.")
+
+if __name__ == "__main__":
+    main()
