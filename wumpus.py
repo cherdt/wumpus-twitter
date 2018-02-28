@@ -193,7 +193,7 @@ def get_commands_from_twitter():
         if message.id > int(newest_dm_id):
             newest_dm_id = int(message.id)
         # call main to process this game command
-        main(['python', message.sender_screen_name, message.text])
+        main(['python', message.sender_screen_name.encode('ascii', 'ignore'), message.text.encode('ascii', 'ignore')])
 
     # Update last_seen_dm in twitter state db
     twitter.set_last_seen_dm(newest_dm_id)
