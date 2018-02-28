@@ -17,7 +17,7 @@ twitter = Twitter(client, "twitter_state")
 
 
 def is_debug_mode():
-    return True
+    return False
 
 
 def tweet(msg):
@@ -182,7 +182,7 @@ def print_state():
 def get_commands_from_twitter():
     # Get DMs posted after the last DM we've seen
     id = twitter.get_last_seen_dm()
-    response = get_dms_since(id)
+    response = twitter.get_dms_since(id)
 
     # Initialize the last DM we've seen
     newest_dm_id = id
