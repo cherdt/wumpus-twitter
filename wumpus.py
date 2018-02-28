@@ -44,6 +44,8 @@ def get_random_event():
 
 
 # make the Wumpus move to an adjacent cave
+#TODO: wumpus should not move onto player!
+#TODO: wumpus should not always move!
 def disturb_wumpus():
     wumpus_adjacent = board.get_adjacent(state.wumpus_position)
     state.wumpus_position = wumpus_adjacent[random.randint(0,2)]
@@ -92,18 +94,21 @@ def move (v):
 
 # takes 1 argument, the target
 def shoot(v):
-    target = v
+    target = int(v)
     if state.arrows_remaining > 0:
         if board.is_adjacent(target, state.player_position):
             if target == state.wumpus_position:
                 tweet("You killed the wumpus! You WIN!")
                 state.delete()
+                sys.exit()
             else:
                 tweet("Drats! Missed!")
                 state.arrows_remaining -= 1
                 if board.is_adjacent(state.wumpus_position, state.player_position):
                     disturb_wumpus()
         else:
+            # TODO different message if user targets own board position
+            # e.g. "You refrain from such foolishness."
             tweet("Think you can shoot through rock walls?")
     else:
         tweet("No arrows left.")
