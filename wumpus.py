@@ -188,7 +188,7 @@ def get_commands_from_twitter():
     newest_dm_id = id
 
     # for each DM, call main and pass username and DM text (command)
-    for message in response:
+    for message in response.data:
         # If this ID is later than our latest ID, update the latest ID
         if message.id > int(newest_dm_id):
             newest_dm_id = int(message.id)
