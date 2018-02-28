@@ -17,7 +17,7 @@ class Twitter:
     	return self.last_seen_dm
 
     def set_last_seen_dm(self, id):
-    	db = shelve.open(statedb)
+    	db = shelve.open(self.statedb)
     	db['last_seen_dm'] = id
     	db.close()
 

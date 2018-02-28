@@ -141,9 +141,9 @@ def print_intro():
           "\n" +
           "\nYou are in a series of dark caverns." +
           "\nLike, really dark." +
-          "\nYou can barely see.")
-
-    tweet("The caverns are ADA compliant." +
+          "\nYou can barely see." +
+          "\n" +
+          "\nThe caverns are ADA compliant." +
           "\nThey are numbered in Braille." +
           "\nWhich, somehow, you can read. Cool!")
 
@@ -193,7 +193,7 @@ def get_commands_from_twitter():
         if message.id > int(newest_dm_id):
             newest_dm_id = int(message.id)
         # call main to process this game command
-        main([message.sender_screen_name, message.text])
+        main(['python', message.sender_screen_name, message.text])
 
     # Update last_seen_dm in twitter state db
     twitter.set_last_seen_dm(newest_dm_id)
@@ -204,10 +204,9 @@ def main(argv):
     if len(argv) < 2:
         if is_debug_mode():
             print "usage: python wumpus.py username [move]"
-            sys.exit()
         else:
             get_commands_from_twitter()
-
+        sys.exit()
 
     # Strip invalid username characters (only A-Za-z0-9_ are valid)
     username = re.sub(r'[^A-Za-z0-9_]', r'', argv[1])
