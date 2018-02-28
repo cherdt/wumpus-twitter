@@ -13,7 +13,7 @@ board = Board()
 # create twitter client
 client = get_client()
 # create twitter wrapper
-twitter = Twitter(client)
+twitter = Twitter(client, "twitter_state")
 
 
 def is_debug_mode():
@@ -93,7 +93,7 @@ def move (v):
 # takes 1 argument, the target
 def shoot(v):
     target = v
-    if arrows_remaining > 0:
+    if state.arrows_remaining > 0:
         if board.is_adjacent(target, state.player_position):
             if target == state.wumpus_position:
                 tweet("You killed the wumpus! You WIN!")
@@ -137,11 +137,9 @@ def print_help():
 
 def print_intro():
 
-    tweet("===================" +
-          "\n| HUNT THE WUMPUS |" +
-          "\n===================")
-
-    tweet("You are in a series of dark caverns." +
+    tweet("*** HUNT THE WUMPUS ***" +
+          "\n" +
+          "\nYou are in a series of dark caverns." +
           "\nLike, really dark." +
           "\nYou can barely see.")
 
@@ -174,18 +172,42 @@ def get_adjacent_danger():
 
 def print_state():
     msg = "You are in cavern " + str(state.player_position) + "."
-    if is_debug_mode():
-        msg += "\nW: " + state.wumpus_position +", P: " + state.pit_position + ", B: " + state.bat_position + ", A: " + state.arrow_position
+    #if is_debug_mode():
+    #    msg += "\nW: " + state.wumpus_position +", P: " + state.pit_position + ", B: " + state.bat_position + ", A: " + state.arrow_position
     msg += get_random_event()
     msg += get_adjacent_danger()
     tweet(msg)
 
 
+def get_commands_from_twitter():
+    # Get DMs posted after the last DM we've seen
+    id = twitter.get_last_seen_dm()
+    response = get_dms_since(id)
+
+    # Initialize the last DM we've seen
+    newest_dm_id = id
+
+    # for each DM, call main and pass username and DM text (command)
+    for message in response:
+        # If this ID is later than our latest ID, update the latest ID
+        if message.id > int(newest_dm_id):
+            newest_dm_id = int(message.id)
+        # call main to process this game command
+        main([message.sender_screen_name, message.text])
+
+    # Update last_seen_dm in twitter state db
+    twitter.set_last_seen_dm(newest_dm_id)
+
+
 def main(argv):
     # Make sure we received a target user
     if len(argv) < 2:
-        print "usage: python wumpus.py username [move]"
-        sys.exit()
+        if is_debug_mode():
+            print "usage: python wumpus.py username [move]"
+            sys.exit()
+        else:
+            get_commands_from_twitter()
+
 
     # Strip invalid username characters (only A-Za-z0-9_ are valid)
     username = re.sub(r'[^A-Za-z0-9_]', r'', argv[1])
