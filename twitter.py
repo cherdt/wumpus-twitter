@@ -9,7 +9,10 @@ class Twitter:
 
     def get_last_seen_dm(self):
     	db = shelve.open(self.statedb)
-    	self.last_seen_dm = db['last_seen_dm']
+    	try:
+    	    self.last_seen_dm = db['last_seen_dm']
+    	except:
+    		db['last_seen_dm'] = self.last_seen_dm
     	db.close()
     	return self.last_seen_dm
 
