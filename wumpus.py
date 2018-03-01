@@ -82,7 +82,7 @@ def disturb_wumpus():
     wumpus_adjacent.append(state.wumpus_position)
 
     # select randomly an adjacent position or the current position
-    state.wumpus_position = random.choice(wumpus_adjacent)
+    state.wumpus_position = int(random.choice(wumpus_adjacent))
     state.update()
         
 
