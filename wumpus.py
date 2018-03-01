@@ -14,10 +14,17 @@ board = Board()
 client = get_client()
 # create twitter wrapper
 twitter = Twitter(client, "twitter_state")
+game_over = False
 
 
 def is_debug_mode():
     return False
+
+
+def end_game(msg):
+    game_over = True
+    state.delete()
+    tweet(msg + "\n\nDM me any time to start a new game!")
 
 
 def tweet(msg):
@@ -82,14 +89,12 @@ def disturb_wumpus():
 def check_position():
     # check wumpus
     if state.player_position == state.wumpus_position:
-        tweet("You've been eaten by a wumpus!")
-        state.delete()
+        end_game("You've been eaten by a wumpus!")
         return
 
     # check pit
     if state.player_position == state.pit_position:
-        tweet("You fell down a pit! You died!")
-        state.delete()
+        end_game("You fell down a pit! You died!")
         return
 
     # check bats
@@ -124,8 +129,7 @@ def shoot(v):
     if state.arrows_remaining > 0:
         if board.is_adjacent(target, state.player_position):
             if target == state.wumpus_position:
-                tweet("You killed the wumpus! You WIN!")
-                state.delete()
+                end_game("You killed the wumpus! You WIN!")
                 return
             else:
                 tweet("Drats! Missed!")
@@ -153,9 +157,7 @@ def process_command(cmd):
         match = re.search('^[Ss][^ ]* ([0-9]+)$', cmd)
         shoot(match.group(1))
     elif re.search('^[EeQq]', cmd):
-        tweet("You retire to a comfortable life of not hunting wumpuses.")
-        tweet("DM me any time to start a new game!")
-        state.delete()
+        end_game("You retire to a comfortable life of not hunting wumpuses.")
     else:
         print_help()
 
@@ -233,6 +235,8 @@ def get_commands_from_twitter():
 
 
 def main(argv):
+    game_over = False
+    
     # Make sure we received a target user
     if len(argv) < 2:
         if is_debug_mode():
@@ -258,7 +262,9 @@ def main(argv):
     else:
         # Strip unexpected characters (only A-Za-z0-9 " " and "?" are valid)
         process_command(re.sub(r'[^A-Za-z0-9\?\ ]', r'',argv[2]))
-        display_moves()
+        # Display possible moves unless game is over
+        if not game_over:
+            display_moves()
         return
 
 
