@@ -107,9 +107,12 @@ def shoot(v):
                 if board.is_adjacent(state.wumpus_position, state.player_position):
                     disturb_wumpus()
         else:
-            # TODO different message if user targets own board position
-            # e.g. "You refrain from such foolishness."
-            tweet("Think you can shoot through rock walls?")
+            # Check to see if target is user's own board position
+            if target == state.player_position:
+                tweet("You refrain from such foolishness.")
+            # Otherwise, user is targeting non-adjacent cavern
+            else:
+                tweet("Think you can shoot through rock walls?")
     else:
         tweet("No arrows left.")
 
