@@ -216,15 +216,18 @@ def print_state():
 
 
 def get_commands_from_twitter():
-    # Get DMs posted after the last DM we've seen
-    id = twitter.get_last_seen_dm()
-    response = twitter.get_dms_since(id)
-
     # Initialize the last DM we've seen
-    newest_dm_id = id
+    newest_dm_id = twitter.get_last_seen_dm()
+    # Get DMs posted after the last DM we've seen
+    minimum_id = twitter.get_last_seen_dm()
+    response = twitter.get_dms_since(minimum_id)
 
     # for each DM, call main and pass username and DM text (command)
     for message in response.data:
+        # If this ID is earlier that our minimum ID, exit without updating
+        if message.id <= int(minimum_id):
+            print "API problems"
+            sys.exit(1)
         # If this ID is later than our latest ID, update the latest ID
         if message.id > int(newest_dm_id):
             newest_dm_id = int(message.id)
