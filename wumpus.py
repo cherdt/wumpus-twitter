@@ -220,7 +220,11 @@ def get_commands_from_twitter():
     newest_dm_id = twitter.get_last_seen_dm()
     # Get DMs posted after the last DM we've seen
     minimum_id = twitter.get_last_seen_dm()
-    response = twitter.get_dms_since(minimum_id)
+    try:
+        response = twitter.get_dms_since(minimum_id)
+    except:
+        print "API problems"
+        sys.exit(1)
 
     # for each DM, call main and pass username and DM text (command)
     for message in response.data:
