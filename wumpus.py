@@ -44,11 +44,17 @@ def get_random_event():
 
 
 # make the Wumpus move to an adjacent cave
-#TODO: wumpus should not move onto player!
-#TODO: wumpus should not always move!
 def disturb_wumpus():
+    # get array of positions adjacent to the wumpus
     wumpus_adjacent = board.get_adjacent(state.wumpus_position)
-    state.wumpus_position = wumpus_adjacent[random.randint(0,2)]
+
+    # remove player position
+    wumpus_adjacent.remove(state.player_position)
+    # add wumpus position
+    wumpus_adjacent.append(state.wumpus_position)
+
+    # select randomly an adjacent position or the current position
+    state.wumpus_position = wumpus_adjacent[random.randint(0,len(wumpus_adjacent)-1)]
     state.update()
         
 
