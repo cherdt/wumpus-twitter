@@ -58,7 +58,7 @@ def get_random_event():
                      "You find a broken kazoo.",
                      'You find a skeleton wearing a "#1 Wumpus Hunter" t-shirt.',
                      "You find an unopened jar of olives.",
-                     "You find a DVD of the 1983 movie Krull"]
+                     "You find a DVD of the 1983 movie Krull."]
     msg = "\n" + random.choice(random_events)
     return msg
 
@@ -74,7 +74,7 @@ def disturb_wumpus():
     wumpus_adjacent.append(state.wumpus_position)
 
     # select randomly an adjacent position or the current position
-    state.wumpus_position = wumpus_adjacent[random.randint(0,len(wumpus_adjacent)-1)]
+    state.wumpus_position = random.choice(wumpus_adjacent)
     state.update()
         
 
