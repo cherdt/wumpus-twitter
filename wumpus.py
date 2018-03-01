@@ -38,8 +38,28 @@ def display_moves():
 
 def get_random_event():
     msg = ""
-    # decide if we're going to show a random event at all
-    # if so, pick a random event
+
+    # Decide if we're going to show a random event at all
+    if not random.choice([True, False]):
+        return msg
+
+    # Yes, so pick a random event
+    random_events = ["You find a hubcap for a 1994 Buick LeSabre.",
+                     "You find a half-eaten sandwich. Score!",
+                     "A small robot asks if you can spare a dime.",
+                     "Was that a cat? That was probably just a cat.",
+                     "If you get out of here alive, you'll be a hero!",
+                     "You step in somthing sticky.",
+                     "You walked right into a spider-web. Gross!",
+                     "Bet you wish you'd downloaded the Wumpus-Finder app.",
+                     "Wumpus do keep hoards of treasure, right?",
+                     "What's scarier than a wumpus? Basically nothing.",
+                     "Did you remember to pick up your dry-cleaning?",
+                     "You find a broken kazoo.",
+                     'You find a skeleton wearing a "#1 Wumpus Hunter" t-shirt.',
+                     "You find an unopened jar of olives.",
+                     "You find a DVD of the 1983 movie Krull"]
+    msg = "\n" + random.choice(random_events)
     return msg
 
 
