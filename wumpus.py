@@ -22,6 +22,7 @@ def is_debug_mode():
 
 
 def end_game(msg):
+    global game_over
     game_over = True
     state.delete()
     tweet(msg + "\n\nDM me any time to start a new game!")
@@ -97,6 +98,13 @@ def check_position():
         end_game("You fell down a pit! You died!")
         return
 
+    # check arrow
+    if state.player_position == state.arrow_position:
+        tweet("You found an arrow!")
+        state.arrow_position = 999
+        state.arrows_remaining += 1
+        state.update()
+
     # check bats
     if state.player_position == state.bat_position:
         state.player_position = random.randint(1, 20)
@@ -104,13 +112,6 @@ def check_position():
         tweet("Bats carried you away!")
         # player has moved, re-check state
         check_position()
-
-    # check arrow
-    if state.player_position == state.arrow_position:
-        tweet("You found an arrow!")
-        state.arrow_position = 999
-        state.arrows_remaining += 1
-        state.update()
 
 
 # takes 1 argument, the destination
@@ -235,8 +236,9 @@ def get_commands_from_twitter():
 
 
 def main(argv):
+    global game_over
     game_over = False
-    
+
     # Make sure we received a target user
     if len(argv) < 2:
         if is_debug_mode():
