@@ -64,13 +64,13 @@ def check_position():
     if state.player_position == state.wumpus_position:
         tweet("You've been eaten by a wumpus!")
         state.delete()
-        sys.exit()
+        return
 
     # check pit
     if state.player_position == state.pit_position:
         tweet("You fell down a pit! You died!")
         state.delete()
-        sys.exit()
+        return
 
     # check bats
     if state.player_position == state.bat_position:
@@ -89,7 +89,7 @@ def check_position():
 
 
 # takes 1 argument, the destination
-def move (v):
+def move(v):
     if board.is_adjacent(v, state.player_position):
         state.player_position=int(v)
         state.update()
@@ -106,7 +106,7 @@ def shoot(v):
             if target == state.wumpus_position:
                 tweet("You killed the wumpus! You WIN!")
                 state.delete()
-                sys.exit()
+                return
             else:
                 tweet("Drats! Missed!")
                 state.arrows_remaining -= 1
@@ -134,9 +134,8 @@ def process_command(cmd):
         shoot(match.group(1))
     elif re.search('^[EeQq]', cmd):
         tweet("You retire to a comfortable life of not hunting wumpuses.")
-        tweet("DM me any time to start a new game.")
+        tweet("DM me any time to start a new game!")
         state.delete()
-        sys.exit()
     else:
         print_help()
 
@@ -220,7 +219,7 @@ def main(argv):
             print "usage: python wumpus.py username [move]"
         else:
             get_commands_from_twitter()
-        sys.exit()
+        return
 
     # Strip invalid username characters (only A-Za-z0-9_ are valid)
     username = re.sub(r'[^A-Za-z0-9_]', r'', argv[1])
@@ -231,7 +230,7 @@ def main(argv):
     except:
         print_intro()
         display_moves()
-        sys.exit()
+        return
 
     if len(argv) < 3:
         display_moves()
@@ -240,7 +239,7 @@ def main(argv):
         # Strip unexpected characters (only A-Za-z0-9 " " and "?" are valid)
         process_command(re.sub(r'[^A-Za-z0-9\?\ ]', r'',argv[2]))
         display_moves()
-        sys.exit()
+        return
 
 
 if __name__ == "__main__":
