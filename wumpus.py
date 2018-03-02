@@ -36,8 +36,8 @@ def tweet(msg):
 
 
 def display_moves():
-    print_state()
-    msg = "\nPossible moves:"
+    msg = print_state()
+    msg += "\n\nPossible moves:"
     for move in board.get_adjacent(state.player_position):
         msg += " " + str(move)
     msg += "\nYour move? (type 'help' for list of commands)"
@@ -181,14 +181,14 @@ def print_intro():
           "\n" +
           "\nThe caverns are ADA compliant." +
           "\nThey are numbered in Braille." +
-          "\nWhich, somehow, you can read. Cool!")
-
-    tweet("You are here to hunt the terrifying wumpus." +
-         "\nYou'll know when he's near. You'll smell him." +
-         "\nAnd look out for the bottomless pit." +
-         "\nAnd did I mention the bats?" +
-         "\n" +
-         "\nYou have 3 arrows.")
+          "\nWhich, somehow, you can read. Cool!" +
+          "\n" +
+          "\nYou are here to hunt the terrifying wumpus." +
+          "\nYou'll know when he's near. You'll smell him." +
+          "\nAnd look out for the bottomless pit." +
+          "\nAnd did I mention the bats?" +
+          "\n" +
+          "\nYou have 3 arrows.")
 
 
 def get_adjacent_danger():
@@ -212,7 +212,7 @@ def print_state():
     #    msg += "\nW: " + state.wumpus_position +", P: " + state.pit_position + ", B: " + state.bat_position + ", A: " + state.arrow_position
     msg += get_random_event()
     msg += get_adjacent_danger()
-    tweet(msg)
+    return msg
 
 
 def get_commands_from_twitter():
