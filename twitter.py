@@ -41,7 +41,7 @@ class Twitter:
 
     def get_dms_since(self, id):
     	"""Get direct messages older than the specified id"""
-        response = self.client.api.direct_messages.get(since_id=str(id), count=1)
+        response = self.client.api.direct_messages.get(since_id=str(id), count=20)
         return response
 
     def get_followers(self, username):
