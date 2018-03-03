@@ -15,7 +15,7 @@ def main(argv):
     client = get_client()
 
     # create Twitter...
-    twitter = Twitter(client)
+    twitter = Twitter(client, "state")
 
     # follow unfollowed followers
     twitter.follow_my_followers(argv[1])
